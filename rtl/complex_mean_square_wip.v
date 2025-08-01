@@ -5,14 +5,14 @@ module complex_mean_square (
 
     input wire [2:0] i_log2_samples,
 
-    input wire       i_valid,
+    input wire        i_valid,
     input wire [31:0] i_y,
     input wire [31:0] i_y_hat,
-
+	
     output reg        o_valid,
     output reg [63:0] o_data
 );
-
+	
     // Internal wires
     wire [31:0] y_diff_w;
     wire [79:0] sq_diff_data_w;
@@ -22,9 +22,9 @@ module complex_mean_square (
     wire [8:0]  num_samples_w = 1 << i_log2_samples;
     
     // Internal registers
-    reg [8:0] sample_rx_cnt_r;
-    reg [8:0] sample_proc_cnt_r;
-    reg [1:0] state_r, next_state_r;
+    reg [8:0]  sample_rx_cnt_r;
+    reg [8:0]  sample_proc_cnt_r;
+    reg [1:0]  state_r, next_state_r;
 
     // State machine parameters
     localparam S_IDLE      = 2'b00;
@@ -36,7 +36,7 @@ module complex_mean_square (
     //--- Sub-module Instantiations ---//
 
     // Calculate difference: y - y_hat
-    ComplexAdderSubtractor #(.WIDTH(32)) y_difference_module (
+    complex_adder_subtractor #(.WIDTH(32)) y_difference_module (
         .a(i_y),
         .b(i_y_hat),
         .addNotSub(1'b0),
@@ -46,7 +46,7 @@ module complex_mean_square (
     // Calculate squared difference: (y - y_hat)^2
     assign sq_diff_complex_w = {sq_diff_data_w[71:40], sq_diff_data_w[31:0]};
 
-    ComplexMultiplierIpCore cpow_calculator (
+    complex_multiplier_ip cpow_calculator (
         .aclk(i_clk),
         .aresetn(~i_arst),
         .s_axis_a_tvalid(i_valid),
@@ -58,7 +58,7 @@ module complex_mean_square (
     );
 
     // Accumulate the sum of squares
-    ComplexAdderSubtractor #(.WIDTH(64)) square_sum (
+    complex_adder_subtractor #(.WIDTH(64)) square_sum (
         .a(o_data), // Accumulator
         .b(sq_diff_complex_w),
         .addNotSub(1'b1),
@@ -66,7 +66,6 @@ module complex_mean_square (
     );
 
 
-    //--- State Machine ---//
 
     // State register
     always @(posedge i_clk or posedge i_arst) begin
@@ -90,12 +89,12 @@ module complex_mean_square (
     end
 
 
-    //--- Datapath Logic ---//
-    
+    // Datapath Logic
     always @(posedge i_clk or posedge i_arst) begin
         if (i_arst) begin
             o_valid           <= 1'b0;
             o_data            <= 64'b0;
+
             sample_rx_cnt_r   <= 9'b0;
             sample_proc_cnt_r <= 9'b0;
         end else begin
@@ -109,20 +108,25 @@ module complex_mean_square (
                 end
 
                 S_COMPUTING: begin
+                    sample_rx_cnt_r <= sample_rx_cnt_r;
+                    sample_proc_cnt_r <= sample_proc_cnt_r;
+
                     if (i_valid && sample_rx_cnt_r < num_samples_w) begin
                         sample_rx_cnt_r <= sample_rx_cnt_r + 1;
                     end
+
+
                     if (sq_diff_valid_w && !(sample_proc_cnt_r == num_samples_w)) begin
                         sample_proc_cnt_r <= sample_proc_cnt_r + 1;
-                        o_data <= sum_res_w; // Accumulate
+                        o_data <= sum_res_w;
                     end
                 end
 
                 S_FINALIZE: begin
-                    o_valid        <= 1'b1; // Assert valid for one cycle
-                    // Perform signed division via arithmetic shift
-                    o_data[31:0]   <= $signed(o_data[31:0]) >>> i_log2_samples;
-                    o_data[63:32]  <= $signed(o_data[63:32]) >>> i_log2_samples;
+							  o_valid        <= 1'b1; // Assert valid for one cycle
+							  // Perform signed division via arithmetic shift
+							  o_data[31:0]   <= $signed(o_data[31:0]) >>> i_log2_samples;
+							  o_data[63:32]  <= $signed(o_data[63:32]) >>> i_log2_samples;
                 end
             endcase
         end
