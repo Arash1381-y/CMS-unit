@@ -1,4 +1,4 @@
-module ComplexMeanSquare (
+module complex_mean_square (
     input clk,
     input reset,
     input start,
@@ -14,7 +14,7 @@ module ComplexMeanSquare (
     // We calculate y - y_hat here
     wire [31:0] y_difference_wire;
     reg [31:0] y_difference;
-    ComplexAdderSubtractor #(.WIDTH(32)) y_difference_module(
+    complex_adder_subtractor #(.WIDTH(32)) y_difference_module(
         .a(y),
         .b(y_hat),
         .addNotSub(1'b0),
@@ -25,7 +25,7 @@ module ComplexMeanSquare (
     reg cpow_calculator_start;
     wire cpow_calculator_done;
     wire [63:0] cpow_calculator_result;
-    ComplexMultiplier #(.WIDTH(32)) cpow_calculator(
+    complex_multiplier #(.WIDTH(32)) cpow_calculator(
         .clk (clk),
         .start (cpow_calculator_start),
         .a (y_difference),
@@ -36,7 +36,7 @@ module ComplexMeanSquare (
 
     // This module sums the 
     wire [63:0] square_sum_result;
-    ComplexAdderSubtractor #(.WIDTH(64)) square_sum(
+    complex_adder_subtractor #(.WIDTH(64)) square_sum(
         .a(result),
         .b(cpow_calculator_result),
         .addNotSub(1'b1),

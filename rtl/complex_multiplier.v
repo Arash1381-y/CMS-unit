@@ -1,4 +1,4 @@
-module ComplexMultiplier #(
+module complex_multiplier #(
     parameter WIDTH=32
 ) (
     input clk,

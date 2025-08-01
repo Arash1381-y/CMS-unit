@@ -1,4 +1,4 @@
-module ComplexAdderSubtractor #(
+module complex_adder_subtractor #(
     parameter WIDTH=32
 ) (
     input [WIDTH-1:0] a,

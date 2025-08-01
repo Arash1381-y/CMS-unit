@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1754051482" />
+    <testcase name="test_complex_mean_square" classname="test_cms" file="/home/halfblood/common/temp/CMS-unit/sim/verilator/test_cms.py" lineno="10" time="0.011421918869018555" sim_time_ns="210.001" ratio_time="18385.789849166093" />
+  </testsuite>
+</testsuites>
