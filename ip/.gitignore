@@ -1,0 +1,14 @@
+# Ignore all files and directories
+*
+
+# But don't ignore directories themselves, just their contents.
+!*/
+
+# Now, re-include the file types you want to keep
+!*.xco
+!*.v
+!*.veo
+!*.tcl
+
+# This is also a good practice to ensure the .gitignore file itself is tracked
+!.gitignore
