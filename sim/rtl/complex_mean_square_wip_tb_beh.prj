@@ -1,0 +1,4 @@
+verilog work "../../rtl/complex_adder_subtractor.v"
+verilog work "../../ip/complex_multiplier_ip/complex_multiplier_ip.v"
+verilog work "../../rtl/complex_mean_square_wip.v"
+verilog work "complex_mean_square_wip_tb.v"
