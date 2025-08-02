@@ -1,4 +1,4 @@
-module complex_mean_square (
+module complex_mean_square_wip (
     input wire i_clk,
     input wire i_arst,
     input wire i_en,

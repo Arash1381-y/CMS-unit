@@ -16,7 +16,7 @@ module complex_mean_square_wip_tb;
 	wire [63:0] o_data;
 
 	// Instantiate the Unit Under Test (UUT)
-	complex_mean_square uut (
+	complex_mean_square_wip uut (
 		.i_clk(i_clk), 
 		.i_arst(i_arst), 
 		.i_en(i_en), 
