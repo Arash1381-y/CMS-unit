@@ -3,3 +3,8 @@
 **/*.out
 **/sim_build
 **/build
+**/isim.log
+**/isim.wdb
+**/fuse.log
+**/fuse.xmsgs
+**/fuseRelaunch.cmd
