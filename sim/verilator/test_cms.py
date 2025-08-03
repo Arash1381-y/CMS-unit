@@ -28,6 +28,7 @@ async def test_complex_mean_square(dut):
     y_hat_packed = utils.pack_real_imag_vec(y_hat_real, y_hat_imag)
 
     # ==== Feeding Data ====
+    dut.i_valid = 0
     dut.i_en.value = 0
     dut.i_arst.value = 1
     await ClockCycles(dut.i_clk, 2)
@@ -38,11 +39,6 @@ async def test_complex_mean_square(dut):
     dut.i_en.value = 1
     await RisingEdge(dut.i_clk)
     dut.i_en.value = 0
-
-    await RisingEdge(dut.i_clk)
-    await RisingEdge(dut.i_clk)
-    await RisingEdge(dut.i_clk)
-
 
     dut._log.info(f"Driving {N} complex numbers into the DUT...")
     for i in range(N):
