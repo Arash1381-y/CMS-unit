@@ -1,156 +1,129 @@
 module complex_mean_square (
-    input clk,
-    input reset,
-    input start,
-    // log_2 of number of number. Number of numbers must be power of two
-    input [2:0] log2n,
-    input [31:0] y,
-    input [31:0] y_hat,
-    // When next_number is 1, the user must place the next numebr in y and y_hat
-    output reg next_number,
-    output reg done,
-    output reg [63:0] result
+    input wire i_clk,
+    input wire i_arst,
+    input wire i_en,
+
+    input wire [2:0] i_log2_samples,
+
+    input wire        i_valid,
+    input wire [31:0] i_y,
+    input wire [31:0] i_y_hat,
+	
+    output reg        o_valid,
+    output reg [63:0] o_data
 );
-    // We calculate y - y_hat here
-    wire [31:0] y_difference_wire;
-    reg [31:0] y_difference;
-    complex_adder_subtractor #(.WIDTH(32)) y_difference_module(
-        .a(y),
-        .b(y_hat),
+	
+    // Internal wires
+    wire [31:0] y_diff_w;
+    wire [63:0] sq_diff_complex_w;
+    wire        sq_diff_valid_w;
+    wire [63:0] sum_res_w;
+    wire [8:0]  num_samples_w = 1 << i_log2_samples;
+    
+    // Internal registers
+    reg [8:0]  sample_rx_cnt_r;
+    reg [8:0]  sample_proc_cnt_r;
+    reg [1:0]  state_r, next_state_r;
+
+    // State machine parameters
+    localparam S_IDLE      = 2'b00;
+    localparam S_INIT      = 2'b01;
+    localparam S_COMPUTING = 2'b10;
+    localparam S_FINALIZE  = 2'b11;
+
+
+    //--- Sub-module Instantiations ---//
+
+    // Calculate difference: y - y_hat
+    complex_adder_subtractor #(.WIDTH(32)) y_difference_module (
+        .a(i_y),
+        .b(i_y_hat),
         .addNotSub(1'b0),
-        .result(y_difference_wire)
+        .result(y_diff_w)
     );
 
-    // Calculate y_difference^2
-    reg cpow_calculator_start;
-    wire cpow_calculator_done;
-    wire [63:0] cpow_calculator_result;
-    complex_multiplier #(.WIDTH(32)) cpow_calculator(
-        .clk (clk),
-        .start (cpow_calculator_start),
-        .a (y_difference),
-        .b (y_difference),
-        .done (cpow_calculator_done),
-        .result (cpow_calculator_result)
+    // Calculate squared difference: (y - y_hat)^2
+    complex_multiplier cpow_calculator (
+        .a(y_diff_w),
+        .b(y_diff_w),
+        .result(sq_diff_complex_w)
     );
 
-    // This module sums the 
-    wire [63:0] square_sum_result;
-    complex_adder_subtractor #(.WIDTH(64)) square_sum(
-        .a(result),
-        .b(cpow_calculator_result),
+    assign sq_diff_valid_w = 1'b1;
+
+    // Accumulate the sum of squares
+    complex_adder_subtractor #(.WIDTH(64)) square_sum (
+        .a(o_data), // Accumulator
+        .b(sq_diff_complex_w),
         .addNotSub(1'b1),
-        .result(square_sum_result)
+        .result(sum_res_w)
     );
 
-    // How many numbers we have seen?
-    reg [8:0] count;
 
-    // State management
-    reg [2:0] state, next_state;
-    localparam IDLE = 3'b000;
-    localparam INIT = 3'b001;
-    localparam READING = 3'b010;
-    localparam COMPUTE_SQUARE = 3'b011;
-    localparam FINALIZE = 3'b100;
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            state <= IDLE;
+
+    // State register
+    always @(posedge i_clk or posedge i_arst) begin
+        if (i_arst)
+            state_r <= S_IDLE;
         else
-            state <= next_state;
+            state_r <= next_state_r;
     end
 
-    // Next state logic
+    // Next-state logic
     always @(*) begin
-        case (state)
-            IDLE: begin
-                if (start)
-                    next_state = INIT;
-                else
-                    next_state = IDLE;
-            end
-            
-            INIT: begin
-                next_state = READING;
-            end
-            
-            READING: begin
-                next_state = COMPUTE_SQUARE;
-            end
-
-            COMPUTE_SQUARE: begin
-                if (cpow_calculator_done) begin
-                    if (count == 8'b1 << log2n)
-                        next_state = FINALIZE;
-                    else
-                        next_state = READING;
-                end else begin
-                    next_state = COMPUTE_SQUARE;
-                end
-            end
-            
-            FINALIZE: begin
-                next_state = IDLE;
-            end
-
-            default: begin
-                // ERROR?
-                next_state = IDLE;
-            end
+        next_state_r = state_r;
+        case (state_r)
+            S_IDLE:      if (i_en) next_state_r = S_INIT;
+            S_INIT:      next_state_r = S_COMPUTING;
+            S_COMPUTING: if (sample_rx_cnt_r == num_samples_w && sample_proc_cnt_r == num_samples_w)
+                             next_state_r = S_FINALIZE;
+            S_FINALIZE:  next_state_r = S_IDLE;
+            default:     next_state_r = S_IDLE;
         endcase
     end
 
-    // Datapath logic
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            next_number <= 0;
-            done <= 0;
-            result <= 0;
 
-            count <= 0;
-            y_difference <= 0;
-            cpow_calculator_start <= 0;
+    // Datapath Logic
+    always @(posedge i_clk or posedge i_arst) begin
+        if (i_arst) begin
+            o_valid           <= 1'b0;
+            o_data            <= 64'b0;
+
+            sample_rx_cnt_r   <= 9'b0;
+            sample_proc_cnt_r <= 9'b0;
         end else begin
-            case (state)
-                IDLE: begin
-                    // NOP!
-                end
-                
-                INIT: begin
-                    next_number <= 1;
-                    done <= 0;
-                    result <= 0;
+            o_valid <= 1'b0; // Default de-assertion
 
-                    count <= 0;
-                    y_difference <= 0;
-                    cpow_calculator_start <= 0;
-                end
-                
-                READING: begin
-                    next_number <= 0;
-                    y_difference <= y_difference_wire;
-                    count <= count + 1;
-                    cpow_calculator_start <= 1;
+            case (state_r)
+                S_INIT: begin
+                    o_data            <= 64'b0;
+                    sample_rx_cnt_r   <= 9'b0;
+                    sample_proc_cnt_r <= 9'b0;
                 end
 
-                COMPUTE_SQUARE: begin
-                    if (cpow_calculator_done) begin
-                        cpow_calculator_start <= 0;
-                        next_number <= count != (8'b1 << log2n);
-                        result <= square_sum_result;
+                S_COMPUTING: begin
+                    sample_rx_cnt_r <= sample_rx_cnt_r;
+                    sample_proc_cnt_r <= sample_proc_cnt_r;
+
+                    if (i_valid && sample_rx_cnt_r < num_samples_w) begin
+                        sample_rx_cnt_r <= sample_rx_cnt_r + 1;
+                    end
+
+
+                    if (sq_diff_valid_w && !(sample_proc_cnt_r == num_samples_w)) begin
+                        sample_proc_cnt_r <= sample_proc_cnt_r + 1;
+                        o_data <= sum_res_w;
                     end
                 end
-                
-                FINALIZE: begin
-                    done <= 1;
-                    result[31:0] <= $signed(result[31:0]) >>> log2n;
-                    result[63:32] <= $signed(result[63:32]) >>> log2n;
-                end
 
-                default: begin
-                    // Error?
+                S_FINALIZE: begin
+					o_valid        <= 1'b1; // Assert valid for one cycle
+					// Perform signed division via arithmetic shift
+					o_data[31:0]   <= $signed(o_data[31:0]) >>> i_log2_samples;
+					o_data[63:32]  <= $signed(o_data[63:32]) >>> i_log2_samples;
                 end
             endcase
         end
     end
+
 endmodule

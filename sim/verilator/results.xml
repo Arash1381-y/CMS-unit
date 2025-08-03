@@ -1,6 +1,8 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1754115049" />
-    <testcase name="test_complex_mean_square" classname="test_cms" file="/home/halfblood/common/temp/CMS-unit/sim/verilator/test_cms.py" lineno="10" time="0.010190486907958984" sim_time_ns="210.001" ratio_time="20607.553093070048" />
+    <property name="random_seed" value="1754206439" />
+    <testcase name="test_complex_mean_square" classname="test_cms" file="/workdir/sim/verilator/test_cms.py" lineno="10" time="0.01683211326599121" sim_time_ns="170.001" ratio_time="10099.801332936728">
+      <failure message="Test failed with RANDOM_SEED=1754206439" />
+    </testcase>
   </testsuite>
 </testsuites>

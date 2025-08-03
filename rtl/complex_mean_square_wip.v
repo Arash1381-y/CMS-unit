@@ -123,10 +123,10 @@ module complex_mean_square_wip (
                 end
 
                 S_FINALIZE: begin
-							  o_valid        <= 1'b1; // Assert valid for one cycle
-							  // Perform signed division via arithmetic shift
-							  o_data[31:0]   <= $signed(o_data[31:0]) >>> i_log2_samples;
-							  o_data[63:32]  <= $signed(o_data[63:32]) >>> i_log2_samples;
+					o_valid        <= 1'b1; // Assert valid for one cycle
+					// Perform signed division via arithmetic shift
+					o_data[31:0]   <= $signed(o_data[31:0]) >>> i_log2_samples;
+					o_data[63:32]  <= $signed(o_data[63:32]) >>> i_log2_samples;
                 end
             endcase
         end

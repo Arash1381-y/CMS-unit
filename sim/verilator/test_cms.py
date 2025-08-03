@@ -10,7 +10,7 @@ from cocotb.triggers import RisingEdge, ClockCycles
 @cocotb.test()
 async def test_complex_mean_square(dut):
     """Test for the Complex Mean Square module."""
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.i_clk, 10, units="ns").start())
     dut._log.info("Starting Complex Mean Square test")
 
     log2n = 3
@@ -28,30 +28,34 @@ async def test_complex_mean_square(dut):
     y_hat_packed = utils.pack_real_imag_vec(y_hat_real, y_hat_imag)
 
     # ==== Feeding Data ====
-    dut.start.value = 0
-    dut.reset.value = 1
-    await ClockCycles(dut.clk, 2)
-    dut.reset.value = 0
-    await RisingEdge(dut.clk)
+    dut.i_en.value = 0
+    dut.i_arst.value = 1
+    await ClockCycles(dut.i_clk, 2)
+    dut.i_arst.value = 0
+    await RisingEdge(dut.i_clk)
     
-    dut.log2n.value = log2n
-    dut.start.value = 1
-    await RisingEdge(dut.clk)
-    dut.start.value = 0
+    dut.i_log2_samples.value = log2n
+    dut.i_en.value = 1
+    await RisingEdge(dut.i_clk)
+    dut.i_en.value = 0
+
+    await RisingEdge(dut.i_clk)
+    await RisingEdge(dut.i_clk)
+    await RisingEdge(dut.i_clk)
+
 
     dut._log.info(f"Driving {N} complex numbers into the DUT...")
     for i in range(N):
-        await RisingEdge(dut.next_number)
-        dut.y.value = int(y_packed[i])
-        dut.y_hat.value = int(y_hat_packed[i])
-        dut._log.info(f"Sent cycle {i+1}: y={utils.to_complex(dut.y.value)}, y_hat={utils.to_complex(dut.y_hat.value)}")
-
-
+        await RisingEdge(dut.i_clk)
+        dut.i_valid = 1
+        dut.i_y.value = int(y_packed[i])
+        dut.i_y_hat.value = int(y_hat_packed[i])
+        dut._log.info(f"Sent cycle {i+1}: y={utils.to_complex(dut.i_y.value)}, y_hat={utils.to_complex(dut.i_y_hat.value)}")
 
     dut._log.info("Waiting for 'done' signal...")
-    await RisingEdge(dut.done)
+    await RisingEdge(dut.o_valid)
     
-    full_value = dut.result.value.integer
+    full_value = dut.o_data.value.integer
     packed_data = np.array([full_value])
     dut_real, dut_imag = utils.unpack_real_imag_vec(packed_data, np.int32)
 
