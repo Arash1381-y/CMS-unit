@@ -25,7 +25,7 @@ LUTs, occupied slices, and DSP blocks needed for the same high-level operation.
 For a group of $N$ input pairs, the unit computes
 
 ```math
-\operatorname{CMS}(y, \hat{y}) =
+\mathrm{CMS}(y, \hat{y}) =
 \frac{1}{N}\sum_{k=0}^{N-1}\left(y_k - \hat{y}_k\right)^2,
 \qquad N = 2^{\mathtt{i\_log2\_samples}}.
 ```
@@ -181,7 +181,7 @@ differences accumulated to $172+108j$. Dividing both components by eight with
 an arithmetic shift produced
 
 ```math
-\operatorname{CMS} = 21+13j.
+\mathrm{CMS} = 21+13j.
 ```
 
 The testbench printed the result as one packed decimal number:
