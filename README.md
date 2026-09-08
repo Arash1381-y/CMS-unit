@@ -22,24 +22,24 @@ LUTs, occupied slices, and DSP blocks needed for the same high-level operation.
 
 ## Module operation and circuit structure
 
-For a group of \(N\) input pairs, the unit computes
+For a group of $N$ input pairs, the unit computes
 
-$$
+```math
 \operatorname{CMS}(y, \hat{y}) =
 \frac{1}{N}\sum_{k=0}^{N-1}\left(y_k - \hat{y}_k\right)^2,
 \qquad N = 2^{\mathtt{i\_log2\_samples}}.
-$$
+```
 
 Let the difference for one sample be
-\(d_k = d_{r,k} + j d_{i,k}\). Its complex square is
+$d_k = d_{r,k} + j d_{i,k}$. Its complex square is
 
-$$
+```math
 d_k^2 = \left(d_{r,k}^2-d_{i,k}^2\right)
 + j\left(2d_{r,k}d_{i,k}\right).
-$$
+```
 
 This is a complex square, not the magnitude-squared operation
-\(\lvert y_k-\hat{y}_k\rvert^2\). The result can therefore have both real and
+$\lvert y_k-\hat{y}_k\rvert^2$. The result can therefore have both real and
 imaginary components, and the real component is not necessarily positive.
 
 The sample count is restricted to a power of two. This allows the final division
@@ -59,19 +59,19 @@ The datapath operates as follows:
 2. When `i_valid` is asserted, `i_y` and `i_y_hat` provide one complex sample
    pair.
 3. The complex subtractor calculates the error
-   \(d_k = y_k-\hat{y}_k\).
+   $d_k = y_k-\hat{y}_k$.
 4. The complex multiplier squares the error.
 5. The complex accumulator adds the square to the running sum.
-6. After \(N\) results have been accumulated, each component is shifted right
-   by `i_log2_samples`, which divides the sum by \(N\).
+6. After $N$ results have been accumulated, each component is shifted right
+   by `i_log2_samples`, which divides the sum by $N$.
 7. `o_valid` is asserted for one clock cycle while `o_data` contains the mean.
 
 The controller follows four states:
 
-$$
+```math
 \mathtt{IDLE}\rightarrow\mathtt{INIT}\rightarrow
 \mathtt{COMPUTING}\rightarrow\mathtt{FINALIZE}\rightarrow\mathtt{IDLE}.
-$$
+```
 
 Separate receive and process counters allow the IP implementation to distinguish
 between a sample accepted at the multiplier input and a delayed result produced
@@ -99,7 +99,7 @@ two's-complement components:
 +---------------------------------+----------------------------------+
 ```
 
-For example, `o_data = 64'h0000000D_00000015` represents \(21+13j\).
+For example, `o_data = 64'h0000000D_00000015` represents $21+13j$.
 
 ## Interface
 
@@ -132,7 +132,7 @@ for the chosen Artix-7 device, Xilinx ISE inferred six DSP48E1 blocks.
 The current non-IP controller treats the combinational multiplier output as
 valid on every computing cycle. Input samples must therefore be contiguous:
 after the first accepted sample, keep `i_valid` asserted and present one new
-pair per clock until all \(N\) pairs have been supplied. A gap can cause the
+pair per clock until all $N$ pairs have been supplied. A gap can cause the
 unchanged input to be accumulated again.
 
 ### Xilinx IP flow
@@ -177,12 +177,12 @@ performance comparison. See the committed reports:
 ## Observed simulation result
 
 The historical ISim run processed eight sample pairs. Their complex squared
-differences accumulated to \(172+108j\). Dividing both components by eight with
+differences accumulated to $172+108j$. Dividing both components by eight with
 an arithmetic shift produced
 
-$$
+```math
 \operatorname{CMS} = 21+13j.
-$$
+```
 
 The testbench printed the result as one packed decimal number:
 
