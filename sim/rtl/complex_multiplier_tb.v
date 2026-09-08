@@ -1,10 +1,12 @@
-module ComplexMultiplierTB;
+`timescale 1ns / 1ps
+
+module complex_multiplier_tb;
     // Our design for complex multiplier is combinational. Thus, we dont need clk, start and done
     reg [31:0] a, b;
     wire [63:0] result;
     integer i;
 
-    ComplexMultiplier #(.WIDTH(32)) cmult(
+    complex_multiplier #(.WIDTH(32)) cmult(
         .a(a),
         .b(b),
         .result(result)

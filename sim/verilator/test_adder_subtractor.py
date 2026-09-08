@@ -6,6 +6,7 @@ from cocotb.triggers import Timer
 @cocotb.test()
 async def test_combinational_adder_subtractor(dut):
     """Test for a purely combinational Adder/Subtractor Unit"""
+    np.random.seed(0xADD)
     dut._log.info("Starting test for Adder/Subtractor")
 
     N = 1000
@@ -24,10 +25,13 @@ async def test_combinational_adder_subtractor(dut):
         dut.a.value = int(a_packed[i])
         dut.b.value = int(b_packed[i])
 
-        await Timer(1, units='ns')
-        dut._log.info(f"a={utils.to_complex(dut.a.value)}, b={utils.to_complex(dut.b.value)}")
+        await Timer(1, unit='ns')
+        dut._log.debug(
+            f"a={utils.to_complex(int(dut.a.value))}, "
+            f"b={utils.to_complex(int(dut.b.value))}"
+        )
 
-        result = dut.result.value.integer
+        result = int(dut.result.value)
         dut_real, dut_imag = utils.unpack_real_imag_vec(np.array([result]), np.int16)
 
         expected_real = a_real[i] + b_real[i]
@@ -47,10 +51,13 @@ async def test_combinational_adder_subtractor(dut):
         dut.a.value = int(a_packed[i])
         dut.b.value = int(b_packed[i])
 
-        await Timer(1, units='ns')
-        dut._log.info(f"a={utils.to_complex(dut.a.value)}, b={utils.to_complex(dut.b.value)}")
+        await Timer(1, unit='ns')
+        dut._log.debug(
+            f"a={utils.to_complex(int(dut.a.value))}, "
+            f"b={utils.to_complex(int(dut.b.value))}"
+        )
 
-        result = dut.result.value.integer
+        result = int(dut.result.value)
         dut_real, dut_imag = utils.unpack_real_imag_vec(np.array([result]), np.int16)
 
         expected_real = a_real[i] - b_real[i]

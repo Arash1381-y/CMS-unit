@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="720" viewBox="0 0 1440 720" role="img" aria-labelledby="title desc">
+  <title id="title">Complex Mean Square unit schematic</title>
+  <desc id="desc">Black-and-white block schematic. Two packed complex inputs pass through a subtractor, a selectable RTL or Xilinx IP complex squarer, an accumulator, and an arithmetic shift divider. A finite-state controller coordinates the datapath.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L0 6 L9 3 Z" fill="#171717"/>
+    </marker>
+    <style>
+      .background { fill: #fff; }
+      .block { fill: #fff; stroke: #171717; stroke-width: 2.5; }
+      .soft-block { fill: #f2f2f2; stroke: #171717; stroke-width: 2.5; }
+      .state { fill: #fff; stroke: #555; stroke-width: 2; }
+      .signal { fill: none; stroke: #171717; stroke-width: 3; marker-end: url(#arrow); }
+      .control { fill: none; stroke: #171717; stroke-width: 2.5; stroke-dasharray: 8 7; marker-end: url(#arrow); }
+      .feedback { fill: none; stroke: #171717; stroke-width: 2.5; stroke-dasharray: 3 6; marker-end: url(#arrow); }
+      .heading { font-family: system-ui, sans-serif; font-size: 30px; font-weight: 700; fill: #111; }
+      .subtitle { font-family: system-ui, sans-serif; font-size: 16px; fill: #333; }
+      .label { font-family: system-ui, sans-serif; font-size: 17px; font-weight: 700; fill: #111; }
+      .detail { font-family: system-ui, sans-serif; font-size: 15px; fill: #333; }
+      .math { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 16px; fill: #111; }
+      .port { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 14px; font-weight: 700; fill: #111; }
+      .state-label { font-family: system-ui, sans-serif; font-size: 14px; font-weight: 700; fill: #111; }
+    </style>
+  </defs>
+
+  <rect class="background" width="1440" height="720"/>
+  <text class="heading" x="720" y="48" text-anchor="middle">Complex Mean Square Unit</text>
+  <text class="subtitle" x="720" y="77" text-anchor="middle">General datapath for N = 2^(i_log2_samples) complex input pairs</text>
+
+  <!-- Input buses -->
+  <text class="port" x="30" y="163">i_y[31:0]</text>
+  <text class="detail" x="30" y="187">imag[15:0] | real[15:0]</text>
+  <path class="signal" d="M190 158 H250"/>
+
+  <text class="port" x="30" y="243">i_y_hat[31:0]</text>
+  <text class="detail" x="30" y="267">imag[15:0] | real[15:0]</text>
+  <path class="signal" d="M205 238 H250"/>
+
+  <!-- Datapath -->
+  <rect class="soft-block" x="250" y="115" width="220" height="180" rx="8"/>
+  <text class="label" x="360" y="157" text-anchor="middle">Complex subtractor</text>
+  <text class="math" x="360" y="202" text-anchor="middle">d = y - y_hat</text>
+  <text class="detail" x="360" y="243" text-anchor="middle">Two signed 16-bit lanes</text>
+  <text class="detail" x="360" y="268" text-anchor="middle">Output: packed 32-bit error</text>
+
+  <path class="signal" d="M470 205 H520"/>
+  <text class="port" x="495" y="101" text-anchor="middle">d[31:0]</text>
+
+  <rect class="block" x="520" y="115" width="220" height="180" rx="8"/>
+  <text class="label" x="630" y="157" text-anchor="middle">Complex squarer</text>
+  <text class="math" x="630" y="198" text-anchor="middle">q = d x d</text>
+  <text class="detail" x="630" y="235" text-anchor="middle">Implementation choice:</text>
+  <text class="detail" x="630" y="260" text-anchor="middle">handwritten RTL or Xilinx IP</text>
+
+  <path class="signal" d="M740 205 H790"/>
+  <text class="port" x="765" y="101" text-anchor="middle">q[63:0]</text>
+
+  <rect class="soft-block" x="790" y="115" width="220" height="180" rx="8"/>
+  <text class="label" x="900" y="157" text-anchor="middle">Complex accumulator</text>
+  <text class="math" x="900" y="202" text-anchor="middle">sum = sum + q</text>
+  <text class="detail" x="900" y="243" text-anchor="middle">Two signed 32-bit lanes</text>
+  <text class="detail" x="900" y="268" text-anchor="middle">Stores N squared errors</text>
+
+  <path class="signal" d="M1010 205 H1060"/>
+  <text class="port" x="1035" y="101" text-anchor="middle">sum</text>
+
+  <rect class="block" x="1060" y="115" width="330" height="180" rx="8"/>
+  <text class="label" x="1225" y="157" text-anchor="middle">Power-of-two divider</text>
+  <text class="math" x="1225" y="198" text-anchor="middle">real_mean = real_sum &gt;&gt;&gt; log2(N)</text>
+  <text class="math" x="1225" y="226" text-anchor="middle">imag_mean = imag_sum &gt;&gt;&gt; log2(N)</text>
+  <text class="port" x="1225" y="265" text-anchor="middle">o_data[63:0]</text>
+
+  <!-- Accumulator feedback -->
+  <path class="feedback" d="M965 295 V342 H835 V295"/>
+  <text class="detail" x="900" y="369" text-anchor="middle">registered running-sum feedback</text>
+
+  <!-- Controller -->
+  <rect class="soft-block" x="250" y="455" width="850" height="175" rx="8"/>
+  <text class="label" x="675" y="493" text-anchor="middle">Controller and sample counters</text>
+
+  <rect class="state" x="285" y="530" width="125" height="55" rx="8"/>
+  <text class="state-label" x="347.5" y="563" text-anchor="middle">IDLE</text>
+  <path class="signal" d="M410 557 H465"/>
+
+  <rect class="state" x="465" y="530" width="125" height="55" rx="8"/>
+  <text class="state-label" x="527.5" y="563" text-anchor="middle">INIT</text>
+  <path class="signal" d="M590 557 H645"/>
+
+  <rect class="state" x="645" y="530" width="165" height="55" rx="8"/>
+  <text class="state-label" x="727.5" y="563" text-anchor="middle">COMPUTING</text>
+  <path class="signal" d="M810 557 H865"/>
+
+  <rect class="state" x="865" y="530" width="165" height="55" rx="8"/>
+  <text class="state-label" x="947.5" y="563" text-anchor="middle">FINALIZE</text>
+
+  <!-- Control inputs and outputs -->
+  <text class="port" x="30" y="492">i_en</text>
+  <path class="control" d="M92 487 H250"/>
+  <text class="port" x="30" y="535">i_valid</text>
+  <path class="control" d="M108 530 H250"/>
+  <text class="port" x="30" y="578">i_log2_samples[2:0]</text>
+  <path class="control" d="M220 573 H250"/>
+
+  <path class="control" d="M470 455 V395 H360 V295"/>
+  <text class="detail" x="405" y="419" text-anchor="middle">accept / clear</text>
+  <path class="control" d="M740 455 V395 H900 V295"/>
+  <text class="detail" x="823" y="419" text-anchor="middle">accumulate</text>
+  <path class="control" d="M1000 455 V395 H1225 V295"/>
+  <text class="detail" x="1110" y="419" text-anchor="middle">finalize / shift</text>
+
+  <path class="control" d="M1100 545 H1330"/>
+  <text class="port" x="1345" y="550">o_valid</text>
+
+  <line x1="250" y1="674" x2="300" y2="674" stroke="#171717" stroke-width="3"/>
+  <text class="detail" x="312" y="679">data</text>
+  <line x1="405" y1="674" x2="455" y2="674" stroke="#171717" stroke-width="2.5" stroke-dasharray="8 7"/>
+  <text class="detail" x="467" y="679">control</text>
+  <line x1="585" y1="674" x2="635" y2="674" stroke="#171717" stroke-width="2.5" stroke-dasharray="3 6"/>
+  <text class="detail" x="647" y="679">accumulator feedback</text>
+</svg>

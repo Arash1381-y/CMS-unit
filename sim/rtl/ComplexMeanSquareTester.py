@@ -54,6 +54,6 @@ print(f"Read {lineCounter - 1} numbers")
 result = ComplexNumber.fromnumber(int(line_split[0]), 64)
 expected = ComplexNumber(currentSum.real // (lineCounter - 1), currentSum.img // (lineCounter - 1), 64)
 if result != expected:
-    print(f"Unexepected result: Expected {expected} got {result}")
+    print(f"Unexpected result: Expected {expected} got {result}")
     exit(1)
 print("Testing passed!")

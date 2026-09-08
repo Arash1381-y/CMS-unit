@@ -1,9 +1,13 @@
 .vscode
+.venv/
 isim
 **/__pycache__
 **/*.out
 **/sim_build
 **/build
+**/results.xml
+**/*.fst
+**/*.vcd
 **/isim.log
 **/isim.wdb
 **/fuse.log

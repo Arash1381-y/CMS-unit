@@ -4,13 +4,14 @@ import utils
 import cocotb
 
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
 
 
 @cocotb.test()
 async def test_complex_mean_square(dut):
     """Test for the Complex Mean Square module."""
-    cocotb.start_soon(Clock(dut.i_clk, 10, units="ns").start())
+    np.random.seed(0xC05)
+    cocotb.start_soon(Clock(dut.i_clk, 10, unit="ns").start())
     dut._log.info("Starting Complex Mean Square test")
 
     log2n = 3
@@ -28,7 +29,7 @@ async def test_complex_mean_square(dut):
     y_hat_packed = utils.pack_real_imag_vec(y_hat_real, y_hat_imag)
 
     # ==== Feeding Data ====
-    dut.i_valid = 0
+    dut.i_valid.value = 0
     dut.i_en.value = 0
     dut.i_arst.value = 1
     await ClockCycles(dut.i_clk, 2)
@@ -43,15 +44,19 @@ async def test_complex_mean_square(dut):
     dut._log.info(f"Driving {N} complex numbers into the DUT...")
     for i in range(N):
         await RisingEdge(dut.i_clk)
-        dut.i_valid = 1
+        dut.i_valid.value = 1
         dut.i_y.value = int(y_packed[i])
         dut.i_y_hat.value = int(y_hat_packed[i])
-        dut._log.info(f"Sent cycle {i+1}: y={utils.to_complex(dut.i_y.value)}, y_hat={utils.to_complex(dut.i_y_hat.value)}")
+        dut._log.debug(
+            f"Sent cycle {i+1}: y={utils.to_complex(int(y_packed[i]))}, "
+            f"y_hat={utils.to_complex(int(y_hat_packed[i]))}"
+        )
 
     dut._log.info("Waiting for 'done' signal...")
     await RisingEdge(dut.o_valid)
+    await ReadOnly()
     
-    full_value = dut.o_data.value.integer
+    full_value = int(dut.o_data.value)
     packed_data = np.array([full_value])
     dut_real, dut_imag = utils.unpack_real_imag_vec(packed_data, np.int32)
 

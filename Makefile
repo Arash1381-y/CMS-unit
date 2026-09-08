@@ -22,12 +22,24 @@ simulate: ${BUILD_DIR}/${PRJ_NAME}
 	@./sim.exe
 	@rm -rf sim.exe
 
+# Portable Cocotb regression. Override with SIM=verilator when desired.
+SIM ?= icarus
+
+test:
+	@$(MAKE) -C sim/verilator SIM=$(SIM) TEST_MODULE=test_cms
+
+test-adder:
+	@$(MAKE) -C sim/verilator SIM=$(SIM) TEST_MODULE=test_adder_subtractor
+
+test-multiplier:
+	@$(MAKE) -C sim/verilator SIM=$(SIM) TEST_MODULE=test_multiplier
+
 
 
 # Target to clean all generated files
 clean:
 	@echo "cleanup ISE project..."
-	@rm -rf $(BUILD_DIR) isim* fuse* *.log *.wdb webtalk* _xmsgs*
+	@rm -rf $(BUILD_DIR) sim/verilator/sim_build isim* fuse* *.log *.wdb webtalk* _xmsgs*
 	@echo "clean complete"
 
-.PHONY: all setup clean
+.PHONY: all setup simulate test test-adder test-multiplier clean
